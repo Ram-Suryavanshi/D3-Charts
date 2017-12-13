@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Bar-Chart Demo</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- <link rel="import" href="data.json"> -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src="https://d3js.org/d3.v3.min.js"></script>
+    <style>
+        .axis path {
+            fill: none;
+            stroke: #ccc;
+            shape-rendering: crispEdges;
+        }
+
+        .axis line {
+            fill: none;
+        }
+
+        .tool-tip {
+            border: 1px solid red !important;
+            border-radius: 5px !important;
+            padding: 20px;
+            background: transparent
+        }
+    </style>
+</head>
+
+<body class="container">
+
+    <h1 class="text-center">Bar Chart Example Demo</h1>
+
+    <script>
+        //Sample Data
+        var data = [{
+                month: 'Jan',
+                amount: 100
+            },
+            {
+                month: 'Feb',
+                amount: 300
+            },
+            {
+                month: 'Mar',
+                amount: 50
+            },
+            {
+                month: 'Apr',
+                amount: 200
+            },
+            {
+                month: 'May',
+                amount: 290
+            },
+            {
+                month: 'Jun',
+                amount: 900
+            },
+            {
+                month: 'July',
+                amount: 1300
+            },
+            {
+                month: 'Aug',
+                amount: 300
+            },
+            {
+                month: 'Sep',
+                amount: 600
+            },
+            {
+                month: 'Oct',
+                amount: 880
+            },
+            {
+                month: 'Nov',
+                amount: 1000
+            },
+            {
+                month: 'Dec',
+                amount: 300
+            },
+            {
+                month: 'fan',
+                amount: 345
+            }
+        ];
+
+
+        // Beautiful D3 Code
+
+        var width = 600,
+            height = 400,
+            margin = {
+                top: 40,
+                right: 20,
+                bottom: 50,
+                left: 60
+            },
+            _height = height - margin.top - margin.bottom,
+            _width = width - margin.left - margin.right;
+
+
+        var svg = d3.select('body').append('svg')
+            .attr('width', width)
+            .attr('height', height);
+
+        var barContainer = svg.append('g')
+            .attr('class', 'bar-container')
+            .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+
+        var xScale = d3.scale.ordinal(),
+            yScale = d3.scale.linear(),
+            xAxis = d3.svg.axis(),
+            yAxis = d3.svg.axis();
+
+        xScale
+            .domain(data.map(function (d) {
+                return d.month;
+            }))
+            .rangeRoundBands([0, _width], 0.05);
+
+        yScale
+            .domain([0, d3.max(data, function (d) {
+                return d.amount;
+            })])
+            .range([_height, 0]);
+
+        xAxis.scale(xScale).orient('bottom');
+        yAxis.scale(yScale).orient('left').ticks(6);
+
+        barContainer.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + _height + ")")
+            .call(xAxis)
+            .append("text")
+            .attr("y",40)
+            .attr("x", _width / 2)
+            .attr("text-anchor", "end")
+            .attr("stroke", "black")
+            .text("Month");
+
+        barContainer.append("g")
+            .attr("class", "y axis")
+            .call(yAxis)
+            .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", "-5.1em")
+            .attr("text-anchor", "end")
+            .attr("stroke", "black")
+            .text("Points");
+
+        var bars = barContainer.selectAll('rect')
+            .data(data);
+
+        bars.enter().append('rect')
+            .attr('x', function (d, i) {
+                return xScale(d.month);
+            })
+            .attr('y', function (d) {
+                return yScale(0);
+            })
+            .attr('height', 0)
+            .attr('width', xScale.rangeBand())
+            .attr('fill', 'steelblue')
+            .on('mouseover', function (d) {
+                var clientRect = this.getBoundingClientRect();
+                toolTip.show({
+                    top: clientRect.top,
+                    left: clientRect.left + clientRect.width / 2
+                }, d)
+            })
+            .on('mouseout', function (d) {
+                toolTip.cleanup();
+            });
+
+        bars.transition()
+            .duration(750)
+            .ease('sin')
+            .attr('y', function (d, i) {
+                return yScale(d.amount);
+            })
+            .attr('height', function (d, i) {
+                return _height - yScale(d.amount);
+            });
+
+        bars.exit().remove();
+
+
+        //Tooltip Implementation
+
+        var toolTip = {};
+        toolTip.show = function (pos, content) {
+            var tooltipOuter = d3.select('body')
+                .append('div')
+                .attr('class', 'tooltip top');
+
+            tooltipOuter
+                .append('div')
+                .attr('class', 'tooltip-arrow');
+
+            tooltipOuter
+                .append('div')
+                .attr('class', 'tooltip-inner')
+                .text(content.amount)
+
+            tooltipOuter.style({
+                'top': (pos.top - tooltipOuter[0][0].offsetHeight) + 'px',
+                'left': (pos.left - tooltipOuter[0][0].offsetWidth / 2) + 'px',
+                'opacity': 1
+            });
+        };
+
+        toolTip.cleanup = function () {
+            d3.selectAll('.tooltip').remove();
+        };
+    </script>
+</body>
+
+</html>
