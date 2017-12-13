@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <title>Line Chart On TimeScale</title>
+    <style>
+        .line {
+            fill: none;
+            stroke: rgb(48, 19, 177);
+            stroke-width: 1.5px;
+        }
+    </style>
+</head>
+
+<body style="padding:5% 10%">
+   <h1>Line graph via Scale-Time<h1>
+<div class="graph"></div>
+
+    <script>
+       
+            var n = 241,          
+                duration = 1000,
+                now = new Date(Date.now() - duration),
+                updatedData = d3.range(n).map(function () {
+                    return Math.random();
+                });
+
+            var margin = {
+                    top: 6,
+                    right: 0,
+                    bottom: 50,
+                    left: 80
+                },
+                width = 1260 - margin.right,
+                height = 450 - margin.top - margin.bottom;
+
+            var x = d3
+                .scaleTime()
+                .domain([now - (n - 2) * duration, now - duration])
+                .range([0, width]);
+
+            var y = d3.scaleLinear() .domain([0, d3.max(updatedData)])
+            .range([height, 0]);
+
+            
+            var line = d3
+                .line()
+                .x(function (d, i) {
+                    return x(now - (n - 1 - i) * duration);
+                })
+                .y(function (d, i) {
+                    return y(d);
+                })
+                .curve(d3.curveBasis);
+
+            var svg = d3
+                .select(".graph")
+                .append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .style("margin-left", -margin.left + "px")
+                .append("g")
+                .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+            svg
+                .append("defs")
+                .append("clipPath")
+                .attr("id", "clip")
+                .append("rect")
+                .attr("width", width)
+                .attr("height", height);
+
+            var xAxis = d3.axisBottom(x);
+            var yAxis = d3.axisLeft(y)
+
+            var axis = svg
+                .append("g")
+                .attr("class", "xaxis")
+                .attr("transform", "translate(0," + height + ")")
+                .call(xAxis)
+                .append("text")
+                .attr("y",40)
+                .attr("x", width/2)
+                .attr("stroke", "black")
+                .text("Current Time");
+
+                var axis = svg
+                .append("g")
+                .attr("class", "yaxis")
+                .attr("transform", "translate(height," + 0 + ")")
+                .call(yAxis)
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("y", 6)
+                .attr("x", -height/2)
+                .attr("dy", "-5.1em")
+                .attr("text-anchor", "end")
+                .attr("stroke", "black")
+                .text("Values");
+
+            var path = svg
+                .append("g")
+                .attr("clip-path", "url(#clip)")
+                .append("path")
+                .datum(updatedData)
+                .attr("class", "line");
+
+            var transition = d3
+                .transition()
+                .duration(duration)
+                .ease(d3.easeLinear);
+
+            // d3.select(window).on("", function () {
+            //     ++count;
+            // });
+
+            (function tick() {
+               
+               
+                transition = transition
+                    .each(function () {
+                        // ++count;
+                        // update the domains
+                        now = new Date();
+                        // if(count > 7)
+                        // count = 0;
+                        var newNumber = Math.random();
+			            // data2.push(newNumber);
+                        x.domain([now - (n - 2) * duration, now - duration]);
+                        y.domain([0, d3.max(updatedData)]);
+
+                        // push the accumulated count onto the back, and reset the count
+                        updatedData.push(Math.min(30, Math.random()));
+                       // count = 0;
+
+                        // redraw the line
+                        svg.select(".line").attr("d", line).attr("transform", null);
+                        // slide the line left
+                        path
+                            .transition(transition)
+                            .attr("transform", "translate(" + x(now - (n - 1) * duration) + ")");
+
+                        // slide the x-axis left
+                        d3.select(".xaxis").transition(transition).call(d3.axisBottom(x));
+                        // d3.select(".yaxis").transition(transition).call(d3.axisLeft(y));
+
+                        // pop the old data point off the front
+                        updatedData.shift();
+                    })
+                    .transition()
+                    .on("start", tick);
+            })();
+     
+    </script>
+</body>
+
+</html>
